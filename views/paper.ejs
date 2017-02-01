@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang = "en" ng-cloak ng-app = "paper" >
+	<header>
+		<%- include('header') %>
+	</header>
+	<body id = "paperId" ng-controller = "paper">
+	
+		<div id = "screen">
+		</div>
+		
+		<div id = "pdfdropinfo" class = "col-md-8 col-md-offset-2 alert alert-info">
+			Drop PDF here to be marked. <br />
+			<strong>n.b.</strong> examcopedia.gen-ed.com.au must be awake for this operation to work
+		</div>
+		
+		<%#-- dropzone specific settings --%>
+		<style>
+		div#dropzone
+		{
+			visibility:hidden;
+			opacity:0;
+			position:fixed;
+			top:0;
+			left:0;
+			z-index:999;
+			width:100%;
+			height:100%;
+			background-color:rgba(255,255,255,0.7);
+			transition:visibility 175ms, opacity 175ms;
+			text-shadow:1px 1px 2px rgba(125,125,125,1);
+			color:#5C9660;
+			display:table;
+		}
+		div#dropzonetext
+		{
+			display:table-cell;
+			text-align:center;
+			vertical-align:middle;
+			transition:font-size 175ms;
+		}
+		
+		div#elipses
+		{
+			animation:bouncingDots 0.9s infinite;
+		}
+		div#elipses:after
+		{
+			content:"."
+		}
+		
+		@keyframes bouncingDots
+		{
+			0% {letter-spacing:0px}
+			10% {letter-spacing:30px}
+			20% {letter-spacing:40px}
+			30% {letter-spacing:45px}
+			40%	{letter-spacing:48px}
+			50% {letter-spacing:50px}
+			60% {letter-spacing:48px}
+			70% {letter-spacing:45px}
+			80% {letter-spacing:40px}
+			90% {letter-spacing:30px}
+			100% {letter-spacing:0px}
+		}
+		</style>
+		<div id = "dropzone">
+			<div id = "dropzonetext">
+			Drop PDF here
+			</div>
+		</div>
+		<script>
+			$(document).ready(function(){
+				var timer = setTimeout(dismissPDFInfo,2000)
+				$('#screen').click(dismissPDFInfo)
+			})
+			
+			var dismissPDFInfo = function(){
+				$('#screen').animate({'opacity':0.0},200,function(){
+					$('#screen').addClass('hidden')
+				})
+				$('#pdfdropinfo').animate({'opacity':0.0},200,function(){
+					$('#pdfdropinfo').addClass('hidden')
+				})
+			}
+			
+			var lasttarget = null
+			function isFile(e){
+			lasttarget=e.target
+				var dt = e.dataTransfer;
+				for(var i = 0; i<dt.types.length;i++){
+					if(dt.types[i]==='Files'){
+						return true;
+					}
+				}
+				return false;
+			}
+			
+			window.addEventListener('dragenter',function(e){
+				if(isFile(e)){
+					$('#dropzone').css({
+						visibility:'visible',
+						opacity:'1',
+					})
+					$('#dropzonetext').css('font-size','48px')
+				}
+			})
+			
+			window.addEventListener('dragleave',function(e){
+				if(e.target===lasttarget){
+					e.preventDefault()
+					clearOverlay()
+				}
+			})
+			
+			window.addEventListener('dragover',function(e){
+				e.preventDefault()
+			})
+			
+			window.addEventListener('drop',function(e){
+				e.preventDefault()
+				if(isFile(e)){
+					var files = e.dataTransfer.files
+					if(files.length == 1){
+						if(/pdf/.test(files[0].type)){
+							$('#dropzonetext').html('uploading <div id = "elipses">.....</div>')
+							var formData = new FormData();
+							formData.append('CBData',String(Date.now()))
+							formData.append('apikey','purplepizzapig')
+							formData.append('file',files[0]);
+							$.ajax({
+								type : 'POST',
+								url : '/pdfmarking',
+								data : formData,
+								processData : false,
+								contentType : false,
+								success : function(o){
+									if(o.success){
+										info_modal('PDF uploaded and is being marked.')
+									}else if(o.error){
+										info_modal('Something went wrong after the upload process.'+o.error)
+									}
+									clearOverlay()
+									$('#dropzonetext').html('Drop PDF here')
+								},
+								error : function(e){
+									console.log(e)
+									info_modal('Uh oh, something went wrong during the upload process.')
+									clearOverlay()
+									$('#dropzonetext').html('Drop PDF here')
+								}
+							})
+						}else{
+							clearOverlay()
+							info_modal('This functionality only accepts one PDF (single paged, or multipaged) at a time.')
+						}
+					}else{
+						clearOverlay()
+						info_modal('This functionality only accepts one PDF (single paged, or multipaged) at a time.')
+					}
+				}
+			})
+			
+			function clearOverlay(){
+				$('#dropzone').css({
+					visibility:'hidden',
+					opacity:0
+				})
+				$('#dropzonetext').css('font-size','42px')
+			}
+			
+		</script>
+	
+		<%- include('modal') %>
+		<div class = "container-fluid" >
+			<div class = "modal fade" id = "textInput">
+				<div class = "modal-dialog" role = "dialog">
+					<div class = "modal-content">
+						<div class = "modal-header">
+							<h3>Edit Lesson Notes</h3>
+						</div>
+						<div class = "modal-body">
+							<div class = "row">
+								<div class = "col-xs-8 col-sm-8 col-md-8 col-lg-8 col-xs-offset-2 col-sm-offset-2 col-md-offset-2 col-lg-offset-2">
+									<input type = "text" class = "form-control"></input>
+								</div>
+							</div>
+						</div>
+						<div class = "modal-footer">
+							<div class = "btn btn-danger" ng-click="deleteQuizWarning($scope.focusIdx)">
+							Delete Quiz
+							</div>
+							<div class = "btn btn-warning" ng-click="showPdf()">
+							Show PDF
+							</div>
+							<div class = "btn btn-default" ng-click="modalFade('cancel')">
+							Cancel
+							</div>
+							<div type = "submit" class = "btn btn-primary" ng-click = "modalFade('save')">
+							Save
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class = "modal fade" role = "dialog" id = "purgePast">
+				<div class = "modal-dialog">
+					<div ng-hide = "purgeInfo==null" class = "modal-content">
+						<div class = "modal-header">
+							<button type="button" class="close" data-dismiss="modal">&times;</button>
+							<h4 class="modal-title">{{purgeInfo.title}}</h4>
+						</div>
+						<div class = "modal-body">
+							<p ng-bind-html = "purgeInfo.body"></p>
+						</div>
+						<div class = "modal-footer">
+							<div ng-click = "purgeInfo.positiveBtnClick()" class = "btn btn-danger">
+								{{purgeInfo.positiveBtnText}}
+							</div>
+							<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						</div>
+					</div>
+					<div ng-show = "purgeInfo==null" class = "modal-content">
+						<div class = "modal-header">
+							<button type="button" class="close" data-dismiss="modal">&times;</button>
+							<h4 class="modal-title">Purge Data</h4>
+						</div>
+						<div class = "modal-body">
+							<p>Please note, this functionality will <strong>permanently</strong> delete the following:</p>
+							<ul>
+								<li>Scanned JPGs from Android app</li>
+								<li>Generated report PDFs</li>
+								<li>Exam PDFs</li>
+							</ul>
+							<p>It will archive all of the active exams. The historical data will remain, but will only be accessible via the backend.</p>
+							<div class = "alert alert-danger">
+								<strong>This action is non-reversible!</strong>
+							</div>
+							<hr>
+							<form class = "form-horizontal" role = "form">
+								<div class = "form-group">
+									<label class = "control-label col-xs-6 col-sm-6 col-md-4 col-lg-4" for = "passcode">Passcode:</label>
+									<div class = "col-xs-4 col-sm-4 col-md-6 col-lg-6">
+										<input autocomplete = "off" ng-model = "purgePastPasscode" class = "form-control" id = "passcode" placeholder = "Ask system admin for the passcode."/>
+									</div>
+								</div>
+							</form>
+						</div>
+						<div class = "modal-footer">
+							<div ng-click = "purgePastProceed()" class = "btn btn-danger">
+								Proceed
+							</div>
+							<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class = "row">
+				<div class = "jumbotron">
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<h1><%- siteName %></h1><h3>Hello <%= user.name %> <a href = "/logout" class = "btn btn-default">logout</a></h3>
+						<hr>
+						</div>
+						<div class = "panel-body">
+						</div>
+						<div class = "panel-footer hidden">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-2 col-sm-2 col-md-2 col-lg-2">
+					<div class = "row">
+						<div class = "left" data-spy = "affix" data-offset-top="857" >
+							<div class = "panel">
+								<div class = "panel-heading">
+								<h3>Quiz</h3>
+								<hr>
+								</div>
+								<div class = "panel-body quizContainer">
+									<div class = " quizUnit" ng-repeat="quiz in quizzes" >
+										
+										<div ng-class = "{'btn-warning':quiz==activeQuiz}" ng-click = "activatePaper(quiz)" class = "quizDroppable btn btn-default  col-xs-push-4 col-sm-push-4 col-md-push-4 col-lg-push-4 col-xs-8 col-sm-8 col-md-8 col-lg-8">
+										{{quiz.shortCode}}
+										</div>
+										<div class = "btn btn-default col-xs-pull-8 col-sm-pull-8 col-md-pull-8 col-lg-pull-8 col-xs-4 col-sm-4 col-md-4 col-lg-4" ng-click="editNotes($index)">
+											<span class = "glyphicon glyphicon-file"></span>
+										</div>
+										<div class = "hidden btn btn-danger col-xs-3 col-sm-3 col-md-3 col-lg-3" ng-click = "deleteQuiz(quiz.shortCode)">
+											×
+										</div>
+									</div>
+								</div>
+								
+								<div class = "panel-heading">
+								<h3>Students</h3>
+								<hr>
+								</div>
+								<div class = "panel-body userContainer">
+									<div class = "userUnit" ng-repeat="student in students">
+										<div ng-class = "{'btn-warning' : student == activeStudent}" ng-click = "activateStudent(student)" class = "studentDroppable btn btn-default btn-block">
+											<span ng-show="false">{{student._id}}</span>
+											<span>{{student.name}}</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class = "col-xs-7 col-sm-7 col-md-7 col-lg-7" id = "centralColumn">
+					<div class = "panel">
+						<div class = "panel-heading">
+							<div class = "col-xs-12 col-sm-12 col-md-12 col-lg-12">
+								<h3>
+									<span ng-show="activeQuiz||activeStudent">Filtered </span><span ng-show="showArchive">Archived </span>Response <label class = "label label-success" ng-show="activeQuiz">{{activeQuiz.shortCode}}</label> <label class = "label label-primary" ng-show="activeStudent">{{activeStudent.name}}</label>
+									<span ng-click="toggleShowArchive()" class = "pull-right btn" ng-class="{'btn-warning' : !showArchive, 'btn-success' : showArchive}">
+										Show <span ng-show="!showArchive">archived</span><span ng-show="showArchive">live</span>
+									</span> 
+									<span ng-click="modalPurge()" class = "pull-right btn btn-danger">
+										Purge
+									</span>
+								</h3>
+							</div>
+							<hr>
+						</div>
+						<div class = "panel-body">
+							<div class ="well" ng-hide = "(activeStudent&&paper.studentName!=activeStudent.name)||(activeQuiz&&paper.quiz!=activeQuiz.shortCode)||showArchive != (paper.status=='archived')" ng-repeat = "paper in papers">
+								<div class = "draggableHeader">
+									<h3>
+									<span ng-show="paper.hasOwnProperty('quiz')" class = "label label-success">
+									{{paper.quiz}}
+									</span>
+									<span ng-show="paper.hasOwnProperty('studentName')" class = "label label-primary">
+									{{paper.studentName}}
+									</span>
+									<br />
+									<span ng-show="answer=='?'" class = "label label-danger" ng-repeat="answer in paper.answer track by $index">
+										<span  class = "glyphicon glyphicon-warning-sign" >
+										</span>
+									</span>
+									
+									<br />
+									<span ng-click="printReport(paper,$event)" ng-show="paper.hasOwnProperty('quiz')&&paper.hasOwnProperty('studentName')"  class = "btn btn-default">
+										<span class = "glyphicon glyphicon-print" >
+										
+										</span>
+									</span>
+									<span ng-click="toggleArchive(paper)" class = "btn btn-warning">
+										<span class = "glyphicon glyphicon-eye-close">
+										</span>
+										<span ng-show="showArchive">
+											Unarchive
+										</span>
+										<span ng-show="!showArchive">
+											Archive
+										</span>
+									</span>
+									<span ng-show="showArchive" ng-click="delete(paper)" class = "btn btn-danger">
+										<span class = "glyphicon glyphicon-trash"></span>
+										Delete
+									</span>
+									<span ng-show="paper.hasOwnProperty('stringifiedArrJsonWrongQRedo')" class = "glyphicon glyphicon-ice-lolly-tasted" tooltip-placement="bottom" tooltip-append-to-body="true" tooltip-popup-delay="100" tooltip-popup-close-delay="3000" uib-tooltip-template="'include/tooltiptemplate2.html'"></span>
+									</h3>
+									
+								</div>
+								<div ng-class = "{focusedDraggable : paper == focusedpaper}" ng-click = "paperfocus(paper)" class = " draggableImage">
+
+									<img ng-src = "paperresult/{{paper.fileName}}" style = "width:100%"  />
+								</div>
+							</div>
+							<%#
+							<div class = "panel panel-default" ng-repeat = "(year,months) in papers">
+								<div class = "panel-heading btn btn-block" ng-click = "toggleYear(year)">
+								<h3>{{year}}</h3>
+								</div>
+								<div ng-show = "yearPanelShow(year)" class = "panel-body">
+									<div class = "panel panel-default" ng-repeat = "(month,days) in months">
+										<div class = "panel-heading btn btn-block" ng-click="toggleMonth(year,month)">
+										<h4>{{intToMonth(month)}}</h4>
+										</div>
+										<div ng-show = "monthPanelShow(month,year)" class = "panel-body">
+											<div class = "panel panel-default" ng-repeat = "(day,files) in days">
+												<div class = "panel-heading btn btn-block" ng-click="toggleDay(year,month,day)">
+												{{intToDay(day)}}
+												</div>
+												<div ng-show = "dayPanelShow(day,month,year)" class = "panel-body">
+													<div class = "draggableImage" ng-repeat="file in files">
+														<img style = "width:100%" ng-src = "paperresult/{{year}}/{{month}}/{{day}}/{{file}}" />
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							%>
+						</div>
+					</div>
+				</div>
+				<div class = "col-xs-3 col-sm-3 col-md-3 col-lg-3">
+					<div class = "row">
+					<div class = "right" data-spy = "affix" data-offset-top="857">
+						<div class = "panel">
+							<div class = "panel-heading">
+							<h3>Answers</h3>
+							<hr>
+							<h5 ng-hide="focusedpaper.hasOwnProperty('fileName')">Click a response to proceed</h5>
+							<div ng-show="focusedpaper.hasOwnProperty('fileName')">
+								<div ng-repeat = "oneAnswer in focusedpaper.answer track by $index" class = "row">
+									<div class = "col-xs-1 col-sm-1 col-md-1 col-lg-1">
+										<h4>
+											<span ng-show ="focusedpaper.hasOwnProperty('quiz')" tooltip-popup-delay = "100" tooltip-popup-close-delay = "3000" tooltip-append-to-body = "true" tooltip-placement="left" uib-tooltip-template = "'include/tooltiptemplate.html'" class = "glyphicon glyphicon-ice-lolly-tasted"></span>
+										</h4>
+									</div>
+									<div class = "col-xs-1 col-sm-1 col-md-1 col-lg-1">
+										<h4>
+											<span ng-class = "{'label-success' : oneAnswer !='?','label-danger':oneAnswer =='?'}" class = "label ">
+												{{$index + 1}}
+											</span>
+										</h4>
+									</div>
+									<div class = "col-xs-9 col-sm-9 col-md-9 col-lg-9">
+										<div ng-click = "alterresults($parent.$index,mcq)" ng-class = "{active : mcq==oneAnswer}" ng-repeat = "mcq in mcqchoices" class = "btn btn-default">{{mcq}}</div>
+									</div>
+									<hr ng-show = "($index+1)%5==0" class = "col-xs-8 col-sm-8 col-md-8 col-lg-8">
+								</div>
+							</div>
+						</div>
+					</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		$(document).ready(function(){
+		
+			var enterKeySubmit = function(e){
+				if(e.which == 13){
+					$('#textInput .btn-primary').click()
+				}
+			}
+		
+			$('#textInput').on('shown.bs.modal',function(){
+				$('#textInput input').focus()
+				$(window).on('keydown',enterKeySubmit)
+				
+			})
+			
+			$('#textInput').on('hide.bs.modal',function(){
+				$(window).off('keydown')
+			})
+		})
+	
+		var socketCallBack = function(o){
+			if(o.error){
+				info_modal('Error.'+o.error)
+			}else if(o.warning){
+				info_modal('Warning.'+o.warning)
+			}
+		}
+	
+		var paper = angular.module('paper',['ui.bootstrap','ngSanitize'])
+		paper.controller('paper',function($scope){
+			
+			socket.on('update paper result',function(obj){
+				console.log('socket on update paper result')
+				switch(obj.mode){
+					case 'add':
+						$scope.papers.push(obj.paperresult)
+						$scope.$apply()
+					break;
+				}
+			})
+			
+			$scope.quizzes = <%- quizzes %>
+			$scope.students = <%- students %>
+			$scope.papers = <%- papers %>
+			$scope.showArchive = false
+			$scope.activeStudent = null
+			$scope.activeQuiz = null
+			
+			for(var i = 0; i<$scope.papers.length; i++){
+				if($scope.papers[i].stringifiedArrJsonWrongQRedo){
+					$scope.papers[i].stringifiedArrJsonWrongQRedo = JSON.parse($scope.papers[i].stringifiedArrJsonWrongQRedo)
+				}
+			}
+			
+			$scope.activatePaper = function(quiz){
+				if($scope.activeQuiz==quiz){
+					$scope.activeQuiz = null
+				}else{
+					$scope.activeQuiz = quiz
+				}
+			}
+			
+			$scope.activateStudent = function(student){
+				if($scope.activeStudent==student){
+					$scope.activeStudent = null
+				}else{
+					$scope.activeStudent = student
+				}
+			}
+			
+			$scope.toggleShowArchive = function(){
+				$scope.showArchive = !$scope.showArchive
+			}
+			
+			$scope.delete = function(obj){
+				socket.emit('delete report',obj,socketCallBack)
+				var idx = $scope.papers.indexOf(obj)
+				$scope.papers.splice(idx,1)
+			}
+			
+			$scope.toggleArchive = function(obj){
+				if(!obj.status||obj.status!='archived'){
+					obj.status = 'archived'
+					socket.emit('archive report',obj,socketCallBack)
+				}else{
+					obj.status = ''
+					socket.emit('unarchive report',obj,socketCallBack)
+				}
+			}
+			$scope.printReport = function(obj,$event){
+			
+				if($($event.currentTarget).hasClass('disabled')){
+					return
+				}
+				
+				$($event.currentTarget).addClass('disabled')
+				var countDown = setTimeout(function(){
+					$($event.currentTarget).removeClass('disabled')
+				},10000)
+				
+				socket.emit('print report',obj,function(o){
+					if(o.success){
+						clearTimeout(countDown);
+						$($event.currentTarget).removeClass('disabled')
+						window.open(o.success,'_blank')
+						if(o.paper){
+							info_modal('Report generated and opened in a new window!')
+							for(var i = 0; i<$scope.papers.length; i++){
+								if($scope.papers[i]._id==o.paper._id){
+									$scope.papers[i] = o.paper
+								}
+							}
+						}else if(o.reprint){
+							info_modal('Report generated and opened in a new window!')
+						}else{
+							info_modal('Report generated and opened in a new window! However, saving homework encountered error. Consult with backend log to diagnose the problem.')
+						}
+					}else if(o.error){
+						info_modal('Error:'+o.error)
+					}
+				})
+			}
+			
+			$scope.purgeInfo;
+			$scope.purgePastPasscode;
+			$scope.modalPurge = function(){
+				delete $scope.purgeInfo;
+				$('#purgePast').modal('show')
+			}
+			$scope.purgePastProceed = function(){
+				var json = {passcode:$scope.purgePastPasscode}
+				socket.emit('purge',json,function(o){
+					if(o.error){
+						info_modal('Error! '+o.error)
+					}else{
+						info_modal('Purge complete.')
+						
+						$scope.quizzes = {}
+						$scope.papers = {}
+						$scope.$apply()
+					}
+				})
+				
+				$('#purgePast').modal('hide')
+				$scope.purgePastPasscode = ''
+			}
+			
+			$scope.focusIdx;
+			$scope.editNotes = function($index){
+				$scope.focusIdx = $index
+				$('#textInput').modal('show')
+				$('#textInput input').val($scope.quizzes[$scope.focusIdx].notes)
+			}
+			$scope.modalFade = function(mode){
+				if(mode == 'save'){
+					var json = {
+						shortCode : $scope.quizzes[$scope.focusIdx].shortCode,
+						newNotes : $('#textInput input').val()
+					}
+					$scope.quizzes[$scope.focusIdx].notes = $('#textInput input').val()
+					socket.emit('add notes',json,function(o){
+						if(o.error){
+							info_modal(o.error)
+						}
+					})
+				}
+				$scope.focusIdx = null
+				$('#textInput').modal('hide')
+			}
+			$scope.showPdf = function(){
+				window.open('pdfout/'+$scope.quizzes[$scope.focusIdx].shortCode+'.pdf','_blank')
+				$scope.modalFade('cancel')
+				info_modal('Mock test opened in a new window!')
+			}
+			$scope.copyHashedId = function($event){
+				var btn = $($event.target)
+				if(btn.hasClass('disabled')){
+					return false
+				}
+				btn.parent().prev().children('textarea').select()
+				if(document.execCommand('copy')){
+					btn.addClass('disabled').html('Copied');
+				}else{
+					btn.addClass('disabled').html('Error! Copy manually!');
+				}
+			}
+			
+			$scope.tmpFocusId;
+			
+			$scope.deleteQuizWarning = function(idx){
+				$scope.purgeInfo = {
+					title : 'Delete Quiz',
+					body : 'Are you sure you want to delete quiz <b>' + $scope.quizzes[$scope.focusIdx]['shortCode']+'</b>?',
+					positiveBtnText : 'Delete',
+					positiveBtnClick : function(){
+						$scope.deleteQuiz($scope.focusIdx)
+					}
+				}
+				$('#purgePast').modal('show')
+			}
+			
+			$scope.deleteQuiz = function(idx){
+				var s = $scope.quizzes[idx]['shortCode']
+				/*
+				for(var idx in $scope.quizzes){
+					if($scope.quizzes[idx]['shortCode']==s){
+					}
+				}
+				*/
+				socket.emit('delete paper quiz',s,function(o){
+					if(o.success){	
+						$scope.quizzes.splice(idx,1);			
+					}else if(o.error){
+						info_modal(o.error)
+					}
+				})
+				
+				$('#purgePast').modal('hide')
+				$('#textInput').modal('hide')
+			}
+			
+			$scope.tooltipTemplate = function(o){
+				var str = '<h4>Hashed ID</h4>'
+				str += '<textarea ng-model = "test">test</textarea>'
+				return str
+			}
+			
+			$scope.mcqchoices = ['A','B','C','D','?']
+			$scope.focusedpaper = {}
+			$scope.paperfocus = function(obj){
+				if($scope.focusedpaper==obj){
+					$scope.focusedpaper = {}
+				}else{
+					$scope.focusedpaper = obj
+				}
+			}
+			$scope.alterresults = function(qIdx,newA){
+				var json = {
+					paperId : $scope.focusedpaper._id,
+					qIdx : qIdx,
+					newA : newA
+				}
+				socket.emit('change paper answer',json,function(o){
+					if(o.error){
+						info_modal('Error.'+o.error)
+					}else{
+						/* do I only have to change $scope.focusedpaper? and do not have to change $scope.papers[i]? */
+						$scope.focusedpaper.answer[json.qIdx] = json.newA
+						$scope.$apply()
+					}
+				})
+			}
+			
+			$(document).ready(function(){
+				$('.draggableImage')
+				.draggable({
+					containment: false,
+					opacity: 0.2,
+					revert: true,
+					revertDuration: 200,
+					helper:'clone',
+					delay:100
+				})
+				
+				$('.studentDroppable')
+				.droppable({
+					accept : '.draggableImage',
+					hoverClass : 'active',
+					tolerance : 'pointer'
+				})
+				.on('drop',function(event,ui){
+					var paperId;
+					var tmp = ui.draggable.children('img').first().attr('src').replace(/paperresult.*?\./,function(s){
+						paperId = s.replace(/paperresult|\/|\./g,'')
+						return s;
+					})
+					var json = {
+						paperId: paperId,
+						userId:$(event.target).children().first().text(),
+						userName:$(event.target).children().last().text()
+					}
+					
+					socket.emit('categorise paper user',json,function(o){
+						if(o.error){
+							console.log(o)
+							info_modal('Error.'+o.error)
+						}else{
+							for(var i = 0; i<$scope.papers.length; i++){
+								if($scope.papers[i].fileName.split('.')[0]==json.paperId){
+									$scope.papers[i].studentId = json.userId
+									$scope.papers[i].studentName = json.userName
+									break;
+								}
+							}
+							$scope.$apply()	
+						}
+					})
+				})
+				
+				$('.quizDroppable').droppable({
+					accept : '.draggableImage',
+					hoverClass : 'active',
+					tolerance : 'pointer'
+				})
+				.on('drop',function(event,ui){
+					
+					var paperId;
+					var tmp = ui.draggable.children('img').first().attr('src').replace(/paperresult.*?\./,function(s){
+						paperId = s.replace(/paperresult|\/|\./g,'')
+						return s;
+					})
+					var json = {
+						paperId: paperId,
+						quizId:event.target.innerText
+					}
+					console.log(json)
+					socket.emit('categorise paper quiz',json,function(o){
+						if(o.error){
+							console.log(o)
+							info_modal('Error.'+o.error)
+						}else{
+							for(var i = 0; i< $scope.papers.length; i++){
+								if($scope.papers[i].fileName.split('.')[0]==json.paperId){
+									$scope.papers[i].quiz = json.quizId
+									break;
+								}
+							}
+							$scope.$apply()
+						}
+					})
+				})
+			})
+			
+			/*
+			$scope.toggleDay = function(y,m,d){
+				$scope.arrDayShow[y][m][d] = !$scope.arrDayShow[y][m][d];
+			}
+			
+			$scope.toggleMonth = function(y,m){
+				$scope.arrMonthShow[y][m] = !$scope.arrMonthShow[y][m];
+			}
+			$scope.arrMonthShow = {}
+			$scope.monthPanelShow = function(m,y){
+				if(!$scope.arrMonthShow[y]){
+					$scope.arrMonthShow[y] = {}
+					$scope.arrMonthShow[y][m] = false;
+					return false;
+				}else{
+					if(!$scope.arrMonthShow[y][m]){
+						$scope.arrMonthShow[y][m] = false
+						return false
+					}else{
+						return $scope.arrMonthShow[y][m]
+					}
+				}
+			}
+			
+			
+			$scope.toggleYear = function(y){
+				$scope.arrYearShow[y] = !$scope.arrYearShow[y];
+			}
+			$scope.arrYearShow = {}
+			$scope.yearPanelShow = function(y){
+				if(!$scope.arrYearShow[y]){
+					$scope.arrYearShow[y] = false;
+					return false;
+				}else{
+					return $scope.arrYearShow[y];
+				}
+			}
+			
+			$scope.collapse = function(paper){
+				console.log(paper)
+			}
+			
+			$scope.intToMonth = function(s){
+				
+				switch(Number(s)){
+					case 1:
+					return 'Jan';
+					case 2:
+					return 'Feb';
+					case 3:
+					return 'Mar';
+					case 4:
+					return 'Apr';
+					case 5:
+					return 'May';
+					case 6:
+					return 'Jun';
+					case 7:
+					return 'Jul';
+					case 8:
+					return 'Aug';
+					case 9:
+					return 'Sep';
+					case 10:
+					return 'Oct';
+					case 11:
+					return 'Nov';
+					case 12:
+					return 'Dec';
+				}
+			}
+			$scope.intToDay = function(s){
+				switch(Number(s)){
+					case 1:
+					return '1st'
+					case 2:
+					return '2nd'
+					case 3:
+					return '3rd'
+					case 21:
+					return '21st'
+					case 22:
+					return '22nd'
+					case 23:
+					return '23rd'
+					case 31:
+					return '31st'
+					default:
+					return s+'th'
+				}
+			}
+			*/
+		})
+	</script>
+</html>

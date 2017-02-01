@@ -1,0 +1,647 @@
+<!doctype html>
+<html <% if(status!='error'){ %>ng-cloak ng-app = "playMain"<% } %>>
+	<header>
+		<%- include('header') %>
+	</header>
+	<body ng-controller = "playController">
+		<div class = "container-fluid">
+		<%- include('modal') %>
+		<div class = "container-fluid" >
+			<div class = "row">
+				<div class = "jumbotron">
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<h1><%- siteName %></h1>
+						<hr>
+						</div>
+						<div class = "panel-footer hidden">
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div ng-show = "showSplash" class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-body">
+							<% if(status!='error'){ %>
+							<div ng-show = "user.lvl==1" ng-click = "play()">
+								<span ng-class="{'glyphicon-record' : status == 'ready', 'glyphicon-stop' : status == 'in progress' && mode == 'Homework','glyphicon-play' : status == 'in progress' && mode == 'Quiz', 'glyphicon-search' : status == 'completed'}" class = "playBtn glyphicon"></span>
+							</div>
+							<% if(mode=='Quiz'){ %>
+							<h2 class = "statusMessage" ng-show="status=='ready'">Click <span class = "glyphicon glyphicon-record"></span> to make the quiz live.</h2>
+							<h2 class = "statusMessage" ng-show="status=='in progress' && questionPos==0">Waiting on players.<span ng-show = "user.lvl==1" > Click <span class = "glyphicon glyphicon-play"></span> to start the quiz.</span></h2>
+							<h2 class = "statusMessage" ng-show="status=='in progress' && questionPos!=0">Resuming lesson.<span ng-show = "user.lvl==1" > Click <span class = "glyphicon glyphicon-play"></span> to resume the quiz.</span></h2>
+							<% }else if(mode=='Homework'){ %>
+							<div ng-show="user.lvl==1">
+								<h2 class = "statusMessage" ng-show="status=='ready'">Click <span class = "glyphicon glyphicon-record"></span> to make the quiz live.</h2>
+								<h2 class = "statusMessage" ng-show="status=='in progress'">Homework in progress. Click <span class = "glyphicon glyphicon-stop"></span> to stop the homework.</span></h2>
+							</div>
+							<div ng-show="user.lvl==0">
+								<span ng-click = "lifecycle('next homework question')" ng-class = "{'glyphicon-play' : questionPos < questions.length-1, 'glyphicon-search' : (questionPos >= questions.length-1)}" class = "playBtn glyphicon"></span>
+								<h2 ng-show = "questionPos < questions.length-1" class = "statusMessage">Click <span class = "glyphicon glyphicon-play"></span> to start your homework.</h2>
+								<h2 ng-show = "questionPos >= questions.length-1" class = "statusMessage">Done! Click <span class = "glyphicon glyphicon-search"></span> to check your result.</h2>
+							</div>
+							<% } %>
+							<h3>short code : <strong>{{shortCode}}</strong></h3>
+							<h3>questions : <strong>{{questions.length}}</strong></h3>
+							<h3>status : <strong>{{status}}</strong></h3>
+							<h3 ng-show="status=='in progress'&&mode=='Quiz'">persons:
+								<h4 ng-show="status=='in progress'" ng-repeat="person in persons">
+									{{person.name}}
+								</h4>
+							</h3>
+							<% }else{ %>
+							<h3><%= shortCode %></h3>
+							<% } %>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<% if(status!='error'){ %>
+			<div ng-show="showQuestionPanel" class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-body">
+							<div class = "col-xs-2 col-sm-2 col-md-2 col-lg-2">
+								<h2 ng-show = "status!='completed'">Q{{questionPos + 1}}</h2>
+								<h2 ng-show = "status=='completed'">{{questionPos}}</h2>
+							</div>
+							<div ng-click = "lifecycle('next question')" ng-show = "showQuestionControl" class = "col-xs-2 col-sm-2 col-md-2 col-lg-2">
+								<h2><span class = "glyphicon glyphicon-step-forward"></span></h2>
+							</div>
+							<div ng-show = "showQuestionControl" class = "FF col-xs-8 col-sm-8 col-md-8 col-lg-8">
+								<div ng-click = "pause()" id = "timer">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div ng-show = "showCountDownTimer" class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-body">
+							<div class = "text-center">
+								<h4>Starting In ...</h4>
+								<h3 ng-show = "countDownShow($index)" ng-repeat="num in countDown">
+								{{num}}
+								</h3>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div  ng-show = "showQuestionContainer" class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">	
+						<div class = "panel-body">
+							<div ng-repeat="question in questions">
+								<h3 ng-show = "showQuestion($index)" ng-bind-html = "parseBody(question.question,question.hashed_id)">
+								
+								</h3>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div ng-show = "showStatScreen" class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div  ng-repeat = "person in tallyPersons">
+						<div class = "panel">
+							<div class = "panel-body">
+								<div class = "col-xs-6 col-sm-6 col-md-6 col-lg-6">
+									<span ng-click = "showSummary[$index] = !showSummary[$index]" ng-class = "{btn : mode=='Homework'}">{{person.name}} : {{person.score}}</span>
+								</div>
+								<div class = "col-xs-6 col-sm-6 col-md-6 col-lg-6">
+									<span ng-click = "showSummary[$index] = !showSummary[$index]" ng-show = "mode=='Homework'" class = "btn btn-default">show results</span>
+								</div>
+							</div>
+						</div>
+						
+						<div ng-show = "showSummary[$index]" class = "row customNgFade">
+							<div class = "col-xs-11 col-sm-11 col-md-11 col-lg-11 col-xs-offset-1 col-sm-offset-1 col-md-offset-1 col-lg-offset-1">
+								<div ng-repeat = "summary in questionSummary($index)" class = "panel">
+									<div ng-bind-html="parseBody(summary.question,summary.hashed_id)" class = "panel-body">
+										
+									</div>
+									<div class = "panel-footer">
+										<span>
+											Correct answer: {{summary.answer}}
+										</span>
+										<span>
+											Your answer: {{getUserAnswer($parent.$index,$index)}}
+										</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div ng-show = "showMCQ" class = "customNgFade row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div ng-click = "mcqChoose($index)" ng-repeat="choice in mcq" ng-class = "[mcqClass($index),{disabled : mcqDisabled}]" class = " col-xs-6 col-sm-6 col-md-3 col-lg-3 btn btn-lg">
+						<h2>{{choice}}</h2>
+					</div>
+				</div>
+				<div class = "row">
+				&nbsp;
+				</div>
+			</div>
+			
+			<div class = "row" ng-repeat="person in personsDecided">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-body">
+						{{person.name}} has decided.
+						</div>
+					</div>
+				</div>
+			</div>
+			<% } %>
+		</div>
+	</body>
+	<script>
+	<% if(status!='error'){ %>
+	
+	var main = angular.module('playMain',['ngSanitize','ngAnimate']);
+	main.controller('playController',function($scope){
+		
+
+		/*
+		
+		showSplash
+		showQuestionPanel
+			showQuestionControl
+		showQuestionControl
+		showQuestionContainer
+		showStatScreen
+		showMCQ
+		personsDecided[]
+		
+		*/
+		
+		
+		$scope.showSplash = true
+		$scope.QuestionPanel = false
+		$scope.showQuestionControl = false
+		$scope.showQuestionContainer = false
+		$scope.showStatScreen = false
+		$scope.showMCQ = false
+		$scope.personsDecided = []
+		$scope.showCountDownTimer = false
+		
+		/* main config */
+		$scope.user = <%- user %> /* lvl to determine what the user sees */
+		$scope.mode = '<%= mode %>' /* Quiz or Homework */
+		$scope.shortCode = '<%= shortCode %>'
+		$scope.questionDuration = 30;
+		
+		if($scope.mode=='Quiz'){
+			socket.emit('join channel','<%= shortCode %>',function(o){
+			
+			})
+		}
+		
+		var nextQuestionCountDown;
+		var nextQuestionTimeout;
+		
+		$scope.mcq = ['A','B','C','D']
+		$scope.length = <%= length %>
+		$scope.showSummary = [false];
+		
+		<% if(mode=='Quiz'){ %>
+		/* maybe a function, drives the whole play */ /* shows/hides */
+		$scope.lifecycle = function(mode){
+			switch (mode){
+				case 'initialise':
+					$scope.showSplash = true
+					$scope.QuestionPanel = false
+					$scope.showQuestionControl = false
+					$scope.showQuestionContainer = false
+					$scope.showStatScreen = false
+					$scope.showMCQ = false
+					$scope.personsDecided = []
+					$scope.showCountDownTimer = false
+				break;
+				case 'start quiz countdown':
+					$scope.showSplash = false
+					$scope.showCountDownTimer = true
+					$scope.countDownPos = 0;
+					var countdown = setInterval(function(){
+						$scope.countDownPos ++
+						$scope.$apply()
+						if($scope.countDownPos == 6){
+							clearInterval(countdown);
+							$scope.showCountDownTimer = false
+							$scope.lifecycle('start quiz')
+						}
+					},1000)
+				break;
+				case 'start quiz':
+					$scope.showCountDownTimer = false;
+					$scope.showQuestionPanel = true;
+					$scope.personsDecided = [];
+					
+					/* the below logic only works for inclass quiz */
+					
+					if($scope.user.lvl==1){
+						$('#timer')
+							.attr('data-timer',$scope.questionDuration)
+							.TimeCircles({ 
+								time : {
+									Days : {show : false },
+									Hours : {show : false },
+									Minutes : {	show : false },
+									Seconds : {	show : true,
+												color : '#337ab7',
+												text : ''}
+										},
+								animation : 'smooth',
+								count_past_zero : false,
+								start : true,
+								total_duration : $scope.questionDuration,
+								circle_bg_color : '#fff'
+								})
+						$scope.showQuestionControl = true;
+						$scope.playStatus = true;
+						$scope.showQuestionContainer = true;
+						nextQuestionTimeout = setTimeout(function(){
+							$scope.lifecycle('next question')
+						},$scope.questionDuration*1000)
+							
+						var json = {
+							shortCode : $scope.shortCode,
+							questionNum : $scope.questionPos
+						}
+						
+						socket.emit('next question',json,function(o){
+							if(o.error){
+								info_modal(o.error)
+							}
+						})
+					}else{
+						$scope.showMCQ = true;
+						$scope.disableMCQ = false;
+					}
+					$scope.$apply();
+				break;
+				case 'next question':
+				
+					/* the only difference between next question and start quiz is questionpos++, not reinitialising timecircles and check if the question has ran out */
+					
+					$scope.questionPos ++
+					if($scope.questions.length-1<$scope.questionPos){
+						$scope.lifecycle('end quiz')
+						var json = {
+							shortCode : $scope.shortCode
+						}
+						socket.emit('end quiz',json,function(o){
+						
+						})
+						return false;
+					}
+				
+					$scope.showCountDownTimer = false;
+					$scope.showQuestionPanel = true;
+					$scope.personsDecided = [];
+					
+					/* the below logic only works for inclass quiz */
+					if($scope.user.lvl==1){
+						$('#timer').TimeCircles().restart();
+						$scope.showQuestionControl = true
+						$scope.playStatus = true
+						$scope.showQuestionContainer = true
+						clearTimeout(nextQuestionTimeout)
+						nextQuestionTimeout = setTimeout(function(){
+							$scope.lifecycle('next question')
+						},$scope.questionDuration*1000)
+							
+						var json = {
+							shortCode : $scope.shortCode,
+							questionNum : $scope.questionPos
+						}
+						
+						socket.emit('next question',json,function(o){
+							if(o.error){
+								info_modal(o.error)
+							}
+						})
+					}else{
+						$scope.showMCQ = true;
+						$scope.disableMCQ = false;
+					}
+					$scope.$apply();
+				
+				break;
+				case 'end quiz':
+					$scope.status = 'completed'
+				
+					$scope.tallyAnswer()
+					$scope.showSplash = true
+					$scope.showQuestionPanel = false
+					$scope.showQuestionControl = false
+					$scope.showQuestionContainer = false
+					$scope.showStatScreen = true
+					$scope.showMCQ = false
+					$scope.personsDecided = [];
+				break;
+			}
+		}
+		<% }else if(mode=='Homework'){ %>
+		
+		$scope.personsDecided = []
+		
+		$scope.lifecycle = function(mode){
+			switch (mode){
+				case 'initialise homework':
+					$scope.showSplash = true;
+					$scope.showQuestionPanel = false
+						$scope.showQuestionControl = false
+					$scope.showQuestionContainer = false
+					$scope.showStatScreen = false
+					$scope.showMCQ = false
+					$scope.questionPos = -1
+				break;
+				case 'next homework question':
+					$scope.showSplash = false
+					$scope.showQuestionPanel = true
+						$scope.showQuestionControl = false
+					$scope.showQuestionContainer = true
+					$scope.showStatScreen = false
+					$scope.showMCQ = true
+					$scope.nextHomeworkQuestion()
+				break;
+				case 'end homework':
+					$scope.tallyPersons = [{name:$scope.user.name,score:$scope.genericTallyAnswers($scope.userAnswers,$scope.questions)}]
+					$scope.showSplash = true;
+					$scope.showQuestionPanel = false
+						$scope.showQuestionControl = false
+					$scope.showQuestionContainer = false
+					$scope.showStatScreen = true
+					$scope.showMCQ = false
+				break;
+				case 'stop homework':
+					$scope.status = 'completed'
+				break;
+				default:
+					info_modal('Error. Code: homework lifecycle '+mode)
+				break;
+			}
+		}
+		
+		$scope.questions = <%- questions %>
+		$scope.questionPos = <%= progress %> -1
+		$scope.userAnswers = <%- userAnswers %>
+		
+		$scope.nextHomeworkQuestion = function(){
+			$scope.questionPos ++
+			if($scope.questionPos>=$scope.questions.length){
+				$scope.lifecycle('end homework')
+			}else{
+				$scope.mcqDisabled = false
+			}
+		}
+		$scope.questionSummary = function($index){
+			if($scope.shortCode.substring(0,1)=='H'){
+				return $scope.questions.slice($index*($scope.length),($index+1)*($scope.length))
+			}else if($scope.shortCode.substring(0,1)=='Q'){
+				return $scope.questions
+			}else{
+				return []
+			}
+		}
+		$scope.getUserAnswer = function($index,$index2){
+			if($scope.user.lvl==1){
+				//var json = 
+				return JSON.parse('{'+$scope.arrUsers[$index].answerSheet+'}')[$index2]
+			}else{
+				return $scope.userAnswers[$index2]
+			}
+		}
+		<% } %>
+		
+		$scope.parseBody = function(i,hashed_id){
+			return parsing_preview(i,hashed_id);
+		}
+		
+		$scope.showQuestion = function($index){
+			if($scope.questionPos == $index){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		
+		$scope.questions = <%- questions %>
+		$scope.shortCode = '<%= shortCode %>'
+		$scope.status = '<%= status %>'
+		
+		$scope.checkFinish = function(userAnswers,arrQuestions){
+			for(var i = 0; i<arrQuestions.length;i++){
+				if(!userAnswers[i]){
+					return false
+				}
+			}
+			return true
+		}
+		
+		$scope.genericTallyAnswers = function(userAnswers,arrQuestions){
+			var score = 0
+			for(var i = 0; i < arrQuestions.length; i++){
+				if(userAnswers[i]){
+					if(arrQuestions[i].answer){
+						if(userAnswers[i]==arrQuestions[i].answer.substring(0,1).toUpperCase()){
+							score ++
+						}
+					}
+				}
+			}
+			return score
+		}
+		
+		if($scope.user.lvl==1){
+			$scope.arrUsers = <%- arrUsers %>
+			$scope.tallyPersons = []
+			for (var i = 0; i<$scope.arrUsers.length; i++){
+				$scope.showSummary.push(false)
+				var answerSheet = JSON.parse('{'+$scope.arrUsers[i].answerSheet+'}')
+				var arrQuestions = $scope.questions.slice($scope.arrUsers[i].start,$scope.arrUsers[i].start+$scope.length)
+				if($scope.checkFinish(answerSheet,arrQuestions)){
+					$scope.tallyPersons.push({name:$scope.arrUsers[i].name,score:$scope.genericTallyAnswers(answerSheet,arrQuestions)})
+				}else{
+					$scope.tallyPersons.push({name:$scope.arrUsers[i].name,score:'In Progress'})
+				}
+			$scope.showStatScreen = true
+			}
+		}
+		
+		$scope.mcqClass = function($index){
+			switch($index){
+				case 0: 
+					return 'btn-success';
+				break;
+				case 1:
+					return 'btn-info';
+				break;
+				case 2:
+					return 'btn-warning';			
+				break;
+				case 3:
+					return 'btn-danger';
+				break;
+				default:
+				break;
+			}
+		}
+		
+		$scope.mcqChoose = function($index){
+			$scope.mcqDisabled = true;
+			var json = {
+				shortCode : '<%= shortCode %>',
+				questionNum : $scope.questionPos,
+				choice : $scope.mcq[$index]
+			}
+			socket.emit('choose answer',json,function(o){
+			
+			})
+			
+			if($scope.mode=='Homework'){
+				$scope.userAnswers[$scope.questionPos] = $scope.mcq[$index]
+				$scope.lifecycle('next homework question')
+			}
+		}
+		
+		$scope.play = function(){
+			if($scope.status=='ready'){
+				$scope.status = 'in progress';
+				
+				socket.emit('start quiz',$scope.shortCode,function(o){
+					if(o.error){
+						info_modal(o.error)
+					}else{
+						if(o.warning){
+							info_modal(o.warning)
+						}
+					}
+				})
+			}else if($scope.status=='in progress'){
+				if($scope.shortCode.substring(0,1)=='H'){
+					$scope.lifecycle('stop homework')
+					socket.emit('tally answer',$scope.shortCode,function(o){
+						if(o.error){
+							info_modal(o.error)
+						}
+					})
+				}else{
+					$scope.lifecycle('start quiz countdown');
+					socket.emit('start quiz',$scope.shortCode,function(o){
+						if(o.error){
+							info_modal(o.error)
+						}
+					})
+				}
+			}else if($scope.status=='completed'){
+				if($scope.shortCode.substring(0,1)=='H'){
+					/* when search button is clicked */
+				}else{
+					$scope.lifecycle('end quiz')
+				}
+			}
+		}
+		
+		<% if(mode=='Quiz'){ %>
+		socket.on('update users',function(o){
+			$scope.persons = o
+			$scope.$apply()
+		})
+		
+		socket.on('person decided',function(i){
+			$scope.personsDecided.push(i)
+			$scope.$apply()
+		})
+		
+		socket.on('start quiz',function(){
+			$scope.lifecycle('start quiz countdown')
+		})
+		
+		socket.on('next question',function(i){
+			$scope.personsDecided = [];
+			$scope.questionPos = i.questionNum
+			$scope.mcqDisabled = false
+			$scope.$apply()
+		})
+		
+		socket.on('end quiz',function(){
+			$scope.showMCQ = false
+			$scope.status = 'completed'
+			$scope.personsDecided =[]
+			$scope.questionPos = 'Quiz Completed!'
+			$scope.$apply()
+		})
+		
+		$scope.tallyPersons =[]
+		$scope.persons = []
+		$scope.questionPos = <%= progress %>
+		$scope.countDown = ['6','5','4','3','2','1','<%= siteName %>']
+		$scope.countDownShow = function($index){
+			if($index==$scope.countDownPos){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		$scope.pause = function(){
+			if($scope.playStatus == true){
+				$scope.playStatus = false;
+				$('#timer').TimeCircles().stop();
+				clearTimeout(nextQuestionTimeout);
+			}else{
+				$scope.playStatus = true;
+				$('#timer').TimeCircles().start();
+				nextQuestionTimeout = setTimeout(function(){
+					$scope.lifecycle('next question');
+				},$('#timer').TimeCircles().getTime()*1000)
+			}
+		}
+		
+		$scope.tallyAnswer = function(){
+			socket.emit('tally answer',$scope.shortCode,function(o){
+				$scope.tallyPersons =[]
+				if(o.error){
+					info_modal(o.error)
+				}else{
+					for(var i = 0; i<o.users.length; i++){
+						var score = 0;
+						for(var j = 0; j<o.arrQuestions.length; j++){
+							if(o.users[i].answerSheet){
+								var userAnswer = JSON.parse('{'+o.users[i].answerSheet+'}')[j] 
+							}
+							var bookAnswer = o.arrQuestions[j].answer 
+							if(userAnswer&&bookAnswer){
+								if(userAnswer.toUpperCase()==bookAnswer.substring(0,1).toUpperCase()){
+									score ++
+								}					
+							}
+						}
+						$scope.tallyPersons.push({name:o.users[i].name,score:score})
+					}
+				}
+				$scope.$apply()
+			})
+		}
+		<% } %>
+	})
+	<% } %>
+	</script>
+</html>

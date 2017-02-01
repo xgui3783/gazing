@@ -1,0 +1,9 @@
+<div class = "hashedIdTooltipContainer">
+	<h4>Hashed Id</h4>
+	<div>
+		<textarea class = "textareaQueryHashedId" ng-repeat="quiz in quizzes | filter : {shortCode : focusedpaper.quiz}">{{quiz.arrQuestions[$index].questionHashedId}}</textarea>
+	</div>
+	<div>
+		<button ng-click="copyHashedId($event)" class = "btn btn-default">Copy to Clipboard</button>
+	</div>
+</div>

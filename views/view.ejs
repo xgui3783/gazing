@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang = "en" ng-app = "viewMain" >
+	<header>
+		<%- include('header') %>
+	</header>
+	<body ng-controller = "viewViewer">
+		<%- include('modal') %>
+		<div class = "container-fluid" >
+			<div class = "row">
+				<div class = "jumbotron">
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<h1><%- siteName %></h1><h3>Hello <%= user.name %> <a href = "/logout" class = "btn btn-default">logout</a></h3>
+						<hr>
+						</div>
+						<div class = "panel-body">
+						</div>
+						<div class = "panel-footer hidden">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<% if(status == 'error'){ %>
+						<h3><%= shortCode %></h3>
+						<% }else{ %>
+						<h3>
+							<%= viewMode %><small> short code: <strong><%= shortCode %></strong></small> 
+							<span ng-click="publish()" ng-class = "{disabled : status == 'ready'}" class = "carouselCtrl btn btn-success"><span class = "glyphicon glyphicon-print"></span></span>
+							<span ng-click ="navigate('prev')" ng-show = "viewMode=='Homework'" ng-class = "{disabled : page==0}" class = "btn btn-default"><span class = "glyphicon glyphicon-step-backward"></span></span>
+							<span ng-show="viewMode=='Homework'">{{page+1}}</span>
+							<span ng-click ="navigate('next')" ng-show = "viewMode=='Homework'" ng-class = "{disabled : false}" class = "btn btn-default"><span class = "glyphicon glyphicon-step-forward"></span></span>
+						</h3>
+						<% } %>
+						</div>
+					</div>
+					<div id = "id_view_div_qC">
+						<div class = "panel questionPanel" ng-click="showOptions($index)" ng-repeat="question in questions">
+							<div class = "panel-body" ng-bind-html="parseBody(question.question,question.hashed_id)">
+							
+							</div>
+							<div class = "panel-footer" ng-bind-html="parseBody(question.answer,question.hashed_id)">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		var viewMain = angular.module('viewMain',['ngSanitize','ngAnimate'])
+		viewMain.controller('viewViewer',function($scope){
+		
+			$scope.shortCode = '<%= shortCode %>'
+			$scope.questions = <%- questions %>
+			$scope.length = <%= length %>
+			$scope.status = '<%= status %>'
+			$scope.viewMode = '<%= viewMode %>'
+			$scope.page = 0;
+			
+			$scope.parseBody = function(i,hashed_id){
+				return parsing_preview(i,hashed_id);
+			}
+			
+			$scope.showOptions = function(index){
+				if($scope.status == 'ready'){
+					info_modal('This lesson has already been saved and can no longer be edited.')
+					return;
+				}
+				var json = {
+					shortCode : $scope.shortCode,
+					position : $scope.page*$scope.length+index,
+					length : $scope.length
+				}
+				socket.emit('delete single',json,function(o){
+					if(o.error){
+						info_modal(o.error)
+					}else if(o.warning){
+						info_modal(o.warning)
+					}else{
+						$scope.questions.splice(index,1);
+						$scope.questions.push(o.success);
+						$scope.$apply();
+					}
+				})
+				
+			}
+			
+			$scope.publish = function(){
+				if($scope.status=='ready'){
+					info_modal('This lesson has already been saved.')
+					return;
+				}
+				
+				var json = {
+					shortCode : $scope.shortCode,
+					length : $scope.length,
+					mode : $scope.viewMode
+				}
+				socket.emit('publish',json,function(o){
+					if(o.error){
+						info_modal(o.error)
+					}else{
+						window.location.href="/"
+					}
+				})
+			}
+			
+			/* only active for homework module */
+			$scope.page = 0;
+			$scope.navigate = function(mode){
+				if($scope.status == 'ready'){
+					info_modal('This lesson has already been saved and can no longer be edited.')
+					return;
+				}
+				if(mode=='next'){
+					$scope.page ++
+				}else if(mode=='prev'){
+					if($scope.page==0){
+						return false;
+					}
+					$scope.page --
+				}
+				var json = {
+					shortCode : $scope.shortCode,
+					page : $scope.page,
+					length : $scope.length
+				}
+				socket.emit('flip page',json,function(o){
+					if(o.error){
+						info_modal(o.error)
+					}else if(o.warning){
+						info_modal(o.warning)
+						$scope.page --
+						$scope.$apply()
+					}else{
+						$scope.questions = o
+						$scope.$apply();
+					}
+				})
+			}
+		})
+	</script>
+</html>

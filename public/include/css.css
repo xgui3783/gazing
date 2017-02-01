@@ -1,0 +1,296 @@
+body
+{
+background-color:#8DCB88;
+color:#5C9660!important;
+//color:#337ab7!important;
+}
+
+textarea
+{
+resize:none
+}
+
+div.muted
+{
+opacity:0.3
+}
+
+#screen
+{
+background-color:rgba(0,0,0,0.6);
+height:100%;
+width:100%;
+z-index:99;
+position:fixed;
+top:0;
+left:0;
+}
+
+#pdfdropinfo
+{
+position:fixed;
+bottom:5px;
+z-index:100
+}
+
+div.jumbotron
+{
+background-color:#8DCB88;
+}
+
+h1
+{
+color:#5C9660;
+}
+	h1:hover
+	{
+	cursor:pointer
+	}
+
+label
+{
+color:#5C9660;
+}
+
+.class_login_div_halflogin>ul.nav>li.active>a
+{
+color:#5C9660;
+font-weight:600;
+}
+
+.btn-default
+{
+color:#5C9660;
+overflow:hidden;
+}
+
+#id_login_img_googlesignin
+{
+background: url('signinwithgooglehover.png') no-repeat;
+}
+
+#id_login_img_facebooksignin
+{
+background: url('signinwithfacebook.png') no-repeat;
+}
+
+.imgcontainer
+{
+display:inline-block;
+}
+
+	.imgcontainer:hover
+	{
+	cursor:pointer;
+	}
+
+.questionPanel
+{
+  transition: 0.5s linear all;
+  -webkit-transition: 0.5s linear all;
+}
+
+.questionPanel.ng-enter
+{
+opacity:0.0
+}
+.questionPanel.ng-enter.ng-enter-active
+{
+opacity:1.0
+}
+.questionPanel.ng-leave
+{
+opacity:1.0;
+}
+.questionPanel.ng-leave.ng-leave-active
+{
+opacity:0.0;
+}
+
+
+.customNgFade
+{
+opacity:1.0
+}
+
+.customNgFade.ng-hide
+{
+opacity:0.0;
+}
+
+.customNgFade.ng-hide-add, .customNgFade.ng-hide-remove
+{
+transition: 0.5s linear all;
+-webkit-transition: 0.5s linear all;
+}
+
+
+.lessonCtrl
+{
+display:inline-block;
+}
+
+.playBtn
+{
+font-size:144px;
+}
+	.playBtn:hover
+	{
+	cursor:pointer
+	}
+	
+	.playBtnReady
+	{
+	color:#5cb85c;
+	}
+#timer
+{
+height:126px;
+}	
+	#timer:hover
+	{
+	cursor:pointer
+	}
+
+.FF
+{
+margin:0;
+font-size:72px;
+line-height:126px;
+}
+	.glyphicon.FF:hover
+	{
+	cursor:pointer
+	}
+	
+.panel-body
+{
+overflow-x:auto;
+}
+
+.focusedDraggable
+{
+border:2px solid #000;
+}
+
+.draggableHeader
+{
+}
+
+.draggableImage
+{
+opacity:0.9;
+}
+	.draggableImage img
+	{
+	}
+	.draggableImage:hover
+	{
+	opacity:1.0
+	}
+
+.left,.right
+{
+padding-left:15px;
+padding-right:15px;
+}
+.affix
+{
+top:30px;
+}
+
+.affix.right
+{
+width:25%;
+}
+
+.affix.left
+{
+width:16.66666667%;
+}
+
+.right .panel
+{
+overflow-y:scroll;
+}
+
+.left .panel
+{
+overflow-y:scroll;
+}
+
+.smsConvo
+{
+background-color:#fff;
+border:solid 1px #ddd;
+}
+	.smsConvo:hover
+	{
+	background-color:#f6f6f6;
+	cursor:pointer;
+	}
+
+.smsConvoVisiting
+{
+background-color:#eee
+}
+
+.newSmsBubble
+{
+margin-top:inherit;
+opacity:1;
+}
+
+.newSmsBubble.ng-hide
+{
+margin-top:-50px;
+opacity:0
+}
+
+.newSmsBubble.ng-hide-remove-active
+{
+	
+}
+
+.newSmsBubble.ng-hide-add, .newSmsBubble.ng-hide-remove
+{
+transition: all linear 0.5s;
+-webkit-transition: all linear 0.5s;	
+}
+
+.smsBubble .alert
+{
+margin-top:30px;	
+margin-bottom:0
+}
+
+.tooltip-inner
+{
+max-width:500px;
+height:auto;
+}
+
+.hashedIdTooltipContainer
+{
+width : 500px	
+}
+
+.overflowHidden
+{
+overflow:hidden;
+}
+
+.textareaQueryHashedId
+{
+width: 450px;
+height:25px;
+resize:none;
+background-color:#000;
+border:none;
+}
+
+.hashedIdTooltip
+{
+width : 500px;
+max-width:500px;
+}

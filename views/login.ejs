@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang = "en">
+	<header>
+<%- include('header') %>
+	</header>
+	<body>
+		<div class = "container-fluid">
+		
+			<div class = "row">
+				<div class = "jumbotron">
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<h1><%- siteName %></h1>
+						<hr>
+						</div>
+						<%- include('loginFragment') %>
+						<div class = "panel-footer hidden">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

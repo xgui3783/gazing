@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang = "en" ng-cloak ng-app="smsmessages">
+	<header>
+		<%- include('header') %>
+	</header>
+	<body id = "paperId" ng-controller="smscontroller">
+		<%- include('modal') %>
+		<div class = "container-fluid" >
+			<div class = "row">
+				<div class = "jumbotron">
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-4 col-lg-4 col-md-offset-2 col-lg-offset-2">
+					<div class = "well">
+						<div class = "row">
+							<div class = "col-xs-12 col-sm-12 col-md-12 col-lg-12 smsConvo" ng-class = "{'smsConvoNotVisiting':key!=focusNumber,'smsConvoVisiting':key==focusNumber}" ng-click="conversation(key)" ng-repeat="(key,value) in smses | groupBy : 'to'">
+								<div class = "panel-heading">
+									<div ng-repeat="dummy in value | filter : {status:'new'} as filtered">
+									</div>
+									<h2><span class = "glyphicon glyphicon-user"></span> {{key}} <span ng-show="filtered.length>0" class = "label label-danger">{{filtered.length}}</span></h2>
+								</div>
+								<div class = "panel-body">
+								<span>{{value[0].reply=='true' ? value[0].to : 'You'}}:</span> {{value[0].message}}
+								
+								<br>
+								<div class = "col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+									<span class = "glyphicon glyphicon-option-horizontal"></span>
+								</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class = "col-xs-12 col-sm-12 col-md-4 col-lg-4 ">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<h3>{{focusNumber=='001' ? 'SMS Conversations' : 'SMS to: '+focusNumber}}</h3>
+						</div>
+						
+						<div ng-hide="focusNumber=='001'" class = "panel-footer">
+							<div class = "row">
+								<form class = "form-horizontal">
+									<input class = "hidden" id = "number" type = "text" required placeholder="Mobile number of the addressee." ng-model="focusNumber" >
+									<div class = "col-xs-8 col-sm-8 col-md-8 col-lg-8">
+										<input class = "form-control" id = "text" placeholder="SMS to be sent." autocomplete="off">
+									</div>
+									<div class = "col-xs-4 col-sm-4 col-md-4 col-lg-4">
+										<button type = "submit" class = "btn btn-block btn-success" id = "send">
+										<span class = "glyphicon glyphicon-send"></span> 
+										</button>
+									</div>
+								</form>
+							</div>
+						</div>
+						
+						<div ng-hide = "focusNumber=='001'" class = "panel-body">
+							<div class = "smsBubble" ng-class = "{newSmsBubble : sms.status == 'new',hidden : sms.to!=focusNumber}" ng-repeat="sms in smses" ng-hide="(sms.status=='new'&&!newSmsAnimationSwitch)">
+								<div ng-class = "{ '{{myBubble}}' : sms.reply == 'false', '{{notMyBubble}}' : sms.reply=='true'}" class = " alert">
+									{{sms.message}}
+								</div>
+								<div class = "timestamp col-xs-12 col-sm-12 col-md-12 col-lg-12" ng-class = "{ 'text-right text-info' : sms.reply == 'false', 'text-left text-success' : sms.reply=='true'}" class = "alert">
+									<em class = "text-muted">{{sms.createdAt | date : 'yyyy-MM-dd HH:mm' : '+1000'}}</em>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		$('#send').click(function(){
+			var obj = {
+				toNumber : $('#number').val(),
+				message : $('#text').val()
+			}
+			console.log(obj)
+			
+			if(obj.toNumber=='001'){
+				info_modal('You need a valid phone number!')
+				return;
+			}
+			
+			socket.emit('sendmessage',obj,function(o){
+				if(o.error){
+					info_modal('Error! SMS may not have been sent correctly. '+o.error)
+				}else{
+					$('#text').val('')
+					$('#text').focus()
+				}
+			})
+		})
+		
+		var smsmessages = angular.module('smsmessages',['angular.filter','ngAnimate'])
+		smsmessages.controller('smscontroller',function($scope,$filter){
+		
+			socket.on('receivesms',function(o){
+				$scope.smses.unshift(o)
+				$scope.$apply()
+				$scope.showNewSms()
+			})
+			
+			$scope.smses = <%- smses %>
+			$scope.focusNumber = '001'
+			$scope.myBubble = 'col-sm-10 col-xs-10 col-md-10 col-lg-10 col-xs-offset-2 col-sm-offset-2 col-md-offset-2 col-lg-offset-2 alert-info'
+			$scope.notMyBubble = 'col-sm-10 col-xs-10 col-md-10 col-lg-10 alert-success'
+			
+			$scope.newSmsAnimationSwitch = false
+			
+			$scope.conversation = function(id){
+				if($scope.focusNumber == id){
+					$scope.focusNumber = '001'
+				}else{
+					$scope.focusNumber = id
+					$scope.showNewSms()
+				}
+			}
+			
+			$scope.showNewSms = function(){
+				
+				var arr = $filter('filter')($scope.smses,{to:$scope.focusNumber})
+				var timer = setTimeout(function(){
+					$scope.newSmsAnimationSwitch = true
+					$scope.$apply()
+					$scope.newSmsAnimationSwitch = false
+					
+					for(var i = 0; i<arr.length; i++){
+						arr[i].status = 'read'
+					}
+					
+					var timer2 = setTimeout(function(){
+						$scope.$apply()
+					},1000)
+					
+					socket.emit('readall',$scope.focusNumber,function(o){
+						if(o.error){
+							info_modal('Error with database '+o.error)
+						}
+					})
+				},100)
+			}
+		})
+	</script>
+</html>

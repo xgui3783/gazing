@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang = "en" ng-cloak ng-app = "teacherMain" >
+	<header>
+		<%- include('header') %>
+	</header>
+	<body ng-controller = "dashPanel">
+		<%- include('modal') %>
+		<div class = "container-fluid" >
+			<div class = "row">
+				<div class = "jumbotron">
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<h1><%- siteName %></h1><h3>Hello <%= user.name %> <a href = "/logout" class = "btn btn-default">logout</a></h3>
+						<hr>
+						</div>
+						<div class = "panel-body">
+						</div>
+						<div class = "panel-footer hidden">
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<% if(user.lvl==1){ %>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<h3>Paper Quiz & Reports</h3>
+						</div>
+						<div class = "panel-body">
+							<div class = "col-xs-12 col-sm-12 col-md-12 col-lg-12">
+								<a href = "/paper" class = "btn btn-lg btn-success btn-block">
+									View & Print Reports
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<h3>In-Class Quizzes</h3>
+						</div>
+						<div class = "panel-body">
+							<div class = "col-xs-12 col-sm-12 col-md-12 col-lg-12" id = "id_main_div_quizContainer">
+								<div ng-mouseenter="modalChange('quiz')" class = "btn btn-lg btn-success btn-block">
+									New In-Class Quiz
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel" ng-show="lesson.mode=='Quiz'" ng-repeat="lesson in lessons">
+						<div  ng-class = "{'muted':lesson.status == 'completed','bg-warning' : lesson.status == 'in progress','bg-success' : lesson.status == 'ready'}" class = "panel-body">
+							<div class = "col-xs-6 col-sm-2 col-md-2 col-lg-2">
+								{{lesson.created | date : 'yyyy-MM-dd'}} 
+							</div>
+							<div class = "col-xs-3 col-sm-2 col-md-2 col-lg-2">
+								<strong>{{lesson.shortCode}}</strong>
+							</div>
+							<div class = "col-xs-3 col-sm-2 col-md-2 col-lg-2">
+								{{lesson.status}}
+							</div>
+							<div class = "col-xs-12 col-sm-6 col-md-6 col-lg-6">
+								<div ng-click = "lessonCtrl('quiz',$index,'view')" class = "lessonCtrl btn btn-default"><span class = "glyphicon glyphicon-search">
+								</div>
+								<div ng-click = "lessonCtrl('quiz',$index,'play')" ng-class = "{disabled : lesson.status == 'pending'}" class = "lessonCtrl btn btn-success"><span class = "glyphicon glyphicon-play-circle">
+								</div>
+								<div ng-click = "lessonCtrl('quiz',$index,'delete')" class = "lessonCtrl btn btn-danger"><span class = "glyphicon glyphicon-trash">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class = "row" >
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-heading">
+						<h3>Homework</h3>
+						</div>
+						<div class = "panel-body">
+							<div class = "col-xs-12 col-sm-12 col-md-12 col-lg-12" id = "id_main_div_quizContainer">
+								<div ng-mouseenter="modalChange('homework')" class = "btn btn-lg btn-success btn-block">
+									Set New Homework
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel" ng-show="lesson.mode=='Homework'" ng-repeat="lesson in lessons">
+						<div  ng-class = "{'muted':lesson.status == 'completed','bg-warning' : lesson.status == 'in progress','bg-success' : lesson.status == 'ready'}" class = "panel-body">
+							<div class = "col-xs-6 col-sm-2 col-md-2 col-lg-2">
+								{{lesson.created | date : 'yyyy-MM-dd'}} 
+							</div>
+							<div class = "col-xs-3 col-sm-2 col-md-2 col-lg-2">
+								<strong>{{lesson.shortCode}}</strong>
+							</div>
+							<div class = "col-xs-3 col-sm-2 col-md-2 col-lg-2">
+								{{lesson.status}}
+							</div>
+							<div class = "col-xs-12 col-sm-6 col-md-6 col-lg-6">
+								<div ng-click = "lessonCtrl('homework',$index,'view')" class = "lessonCtrl btn btn-default"><span class = "glyphicon glyphicon-search">
+								</div>
+								<div ng-click = "lessonCtrl('homework',$index,'play')" ng-class = "{disabled : lesson.status == 'pending'}" class = "lessonCtrl btn btn-success"><span class = "glyphicon glyphicon-play-circle">
+								</div>
+								<div ng-click = "lessonCtrl('homework',$index,'delete')" class = "lessonCtrl btn btn-danger"><span class = "glyphicon glyphicon-trash">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<% }else{ %>
+			
+			<div class = "row" >
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-body">
+							<div class = "form-group">
+								<form method = "GET" ng-submit="submitForm()" action = "{{studentURL}}" id = "studentForm" role = "form" class = "form-horizontal">
+									<label class = "col-xs-12 col-sm-12 col-md-3 col-lg-3 control-label" for = "v">Short Code:</label>
+									<div class = "col-xs-6 col-sm-6 col-md-3 col-lg-3">
+										<input ng-model = "v" type = "text" class = "form-control" id = "v" name = "v">
+									</div>
+									<div class = "col-xs-6 col-sm-6 col-md-3 col-lg-3">
+										<button type = "submit" class = "btn btn-success btn-block">
+										<%= siteTitle %>
+										</button>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class = "row">
+				<div class = "col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+					<div class = "panel">
+						<div class = "panel-body">
+							<div ng-click = "revision()" class = "btn btn-default">Revision
+							</div>
+						</div>
+					</div>
+					<div ng-show = "revisionShow" class = "row customNgFade">
+						<div class = "col-xs-11 col-sm-11 col-md-11 col-lg-11 col-xs-offset-1 col-sm-offset-1 col-md-offset-1 col-lg-offset-1">
+							<div ng-repeat = "revisionQuestion in revisionQuestions" class = "panel">
+								<div ng-bind-html = "parseBody(revisionQuestion.question.question,revisionQuestion.question.hashed_id)" class = "panel-body">
+								</div>
+								<div class = "panel-footer">Correct answer : {{revisionQuestion.question.answer}} Your answer : {{revisionQuestion.yourAnswer}}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>				
+			</div>
+			<% } %>
+		</div>
+	</body>
+	<script>
+	
+		$('#id_main_div_quizContainer .btn-success').off('click').click(function(){
+			$('#id_modal_div_genericModal').modal('show');
+		})
+		
+		var main = angular.module('teacherMain',['ngSanitize','ngAnimate']);
+
+		main.controller('dashPanel',function($scope){
+		
+			$scope.parseBody = function(i,hashed_id){
+				return parsing_preview(i,hashed_id);
+			}
+			
+			$scope.submitForm = function(){
+				if($scope.v){
+					if($scope.v.substring(0,1)=='Q'){
+						console.log('quiz')
+						$scope.studentURL = '/playquiz'
+					}else if($scope.v.substring(0,1)=='H'){
+						console.log('homework')
+						$scope.studentURL = '/playhomework'
+					}
+				}
+			}
+			
+			$scope.modalChange = function(s){
+				switch(s){
+					case 'quiz':
+						$scope.modalTitle = 'New In-Class Quiz';
+						$scope.modalOkBtn = 'Generate'
+						$scope.prmyBtnId = 'id_modal_primaryBtn_quiz'
+					break;
+					case 'homework':
+						$scope.modalTitle = 'Set New Homework';
+						$scope.modalOkBtn = 'Set'
+						$scope.prmyBtnId = 'id_modal_primaryBtn_homework'
+					break;
+					default:
+					break;
+				}
+			}
+			
+			$scope.lessons = <%- lessons %>
+			$scope.lessonCtrl = function(mode,$index,action){
+
+				if($scope.lessons[$index].status=='pending'&&action=='play'){
+					return;
+				}
+				switch(action){
+					case 'view':
+						window.location.href = '/'+mode+'?v='+$scope.lessons[$index].shortCode;
+					break;
+					case 'play':
+						window.location.href = '/play'+mode+'?v='+$scope.lessons[$index].shortCode;
+					break;
+					case 'delete':
+						if(window.confirm('Deleting a lesson is irreversible. Do you wish to proceed?')){
+							var shortCode = $scope.lessons[$index].shortCode
+							socket.emit('delete lesson',shortCode,function(o){
+								if(o.error){
+									info_modal(o.error)
+								}else{
+									$scope.lessons.splice($index,1);
+									$scope.$apply()
+								}
+							})
+						}
+					break;
+					default:
+					break;
+				}
+			}
+			
+			$scope.revisionShow = false
+			$scope.revisionQuestions = []
+			$scope.revision = function(){
+				if($scope.revision.length!=0){
+					$scope.revisionShow = !$scope.revisionShow
+					return false;
+				}
+				socket.emit('revision',function(o){
+					if(o.error){
+						console.log(o.error)
+					}else{
+						if(o.warning){
+							console.log(o.warning)
+						}
+						$scope.revisionQuestions = o
+						$scope.revisionShow = !$scope.revisionShow
+						$scope.$apply()
+					}
+				})
+			}
+		})
+	</script>
+</html>

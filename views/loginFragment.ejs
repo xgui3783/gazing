@@ -1,0 +1,166 @@
+
+				<div id = "id_login_panelbody_loginpanelbody">
+					<div class = "panel-body">
+						<div class = "text-center hidden-md hidden-lg">
+							<a href="#" class="btn btn-block" onclick="$('#id_navbar_login').click();" aria-label="close">&times;</a>
+						</div>
+						<div class = "col-md-6 class_login_div_halflogin">
+							<ul class = "nav nav-tabs">
+								<li class = "active"><a data-toggle = "tab" href = "#" id = "id_login_tab_login">login</a></li>
+								<li ><a data-toggle = "tab" href = "#" id = "id_login_tab_register" >register</a></li>
+							</ul>
+							<form id = "id_login_form_local" class = "form-horizontal" role = "form" action = "/local-login" method = "post">
+
+								<div class = "row">
+								&nbsp;
+								</div>
+								<% if(errors!=''){ %>
+								<div class = "alert alert-danger">
+									<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+									<%= errors %>
+								</div>
+								<% } %>
+								<div class = "form-group registerToggle hidden">
+									<label class = "col-md-4 control-label" for = "name">Name</label>
+									<div class = "col-md-8">
+										<input type ="text" name = "name" id = "fullname" class = "form-control">
+									</div>
+								</div>
+								<div class = "form-group">
+									<label class = "col-md-4 control-label" for = "username">Email</label>
+									<div class = "col-md-8">
+										<input type ="username" name = "email" id = "username" class = "form-control">
+									</div>
+								</div>
+								<div class = "form-group">
+									<label class = "col-md-4 control-label" for = "password">Password</label>
+									<div class = "col-md-8">
+										<input type ="password" name = "password" id = "password" class = "form-control">
+									</div>
+								</div>
+								<div class = "form-group registerToggle hidden">
+									<label class = "col-md-4 control-label" for = "passwordAgain">Retype</label>
+									<div class = "col-md-8">
+										<input type ="password" name = "passwordAgain" id = "passwordAgain" class = "form-control">
+									</div>
+								</div>
+								<div class = "col-md-2 col-md-offset-4">
+									<button type = "submit" class = "btn btn-success btn-lg" id = "id_login_btn_login" >Login</button>
+									
+									<div class = "btn btn-default btn-lg hidden" id = "id_login_btn_register">Register
+									</div>
+								</div>
+							</form>
+						</div>
+						<div class = "col-md-6 class_login_div_halflogin hidden">
+							<div class = "text-center">
+								<div class = "imgcontainer" id = "id_login_img_googlesignin">
+									<img src = "include/signinwithgoogle.png">
+								</div>
+								<br>
+								<div class = "imgcontainer" id = "id_login_img_facebooksignin">
+									<img src = "include/signinwithfacebook.png">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			<script>
+				$('#id_login_tab_login').off('click').click(function(){
+					$('#id_login_form_local').animate({opacity:'0.0'},300,function(){
+						$('id_login_form_local input').parent().parent().removeClass('has-error');
+						$('#id_login_form_local label').removeClass('required');
+						$('#id_login_form_local input').val('');
+						$('#id_login_btn_login').removeClass('hidden');
+						$('.registerToggle,#id_login_btn_register').addClass('hidden');
+						$('#id_login_form_local').animate({opacity:'1.0'});
+					})
+				})
+				$('#id_login_tab_register').off('click').click(function(){
+					$('#id_login_form_local').animate({opacity:'0.0'},300,function(){
+						$('id_login_form_local input').parent().parent().removeClass('has-error');	
+						$('#id_login_form_local label').addClass('required');
+						$('#id_login_form_local input').val('');
+						$('#id_login_btn_login').addClass('hidden');
+						$('.registerToggle,#id_login_btn_register').removeClass('hidden');
+						$('#id_login_form_local').animate({opacity:'1.0'});
+					})
+				})
+				
+				$('#id_login_form_local').submit(function(e){
+					if($('#id_login_tab_register').parent().hasClass('active')){
+						$('#id_login_btn_register').click();
+						return false;
+					}
+				
+					$('id_login_form_local input').parent().parent().removeClass('has-error');
+					var noErrorFlag = true;
+					
+					$('#username,#password').each(function(){
+						if($(this).val()==''){
+							noErrorFlag = false;
+							$(this).parent().parent().addClass('has-error');
+						}else{
+							$(this).parent().parent().removeClass('has-error');
+						}
+					})
+					
+					if(noErrorFlag){
+					
+						$('#id_login_btn_login')
+							.html('logging in...')
+							.addClass('disabled');
+					}else{
+						e.preventDefault();
+					}
+				});
+				
+				$('#id_login_btn_login').off('click').click(function(){
+					if($(this).hasClass('disabled')){
+						return false;
+					}
+					$(this).addClass('disabled');
+					$('#id_login_form_local').submit();
+				})
+				
+				$('#id_login_btn_register').off('click').click(function(){
+				
+					if($(this).hasClass('disabled')){
+						return false;
+					}
+					
+					var errorMessage = 'Error:';
+					var emptyStringFlag = true;
+					var noErrorFlag = true;
+					$('#id_login_form_local input').each(function(){
+						if($(this).val()==''){
+							noErrorFlag = false;
+							if(emptyStringFlag){
+								emptyStringFlag = false;
+								errorMessage += ' All of the fields are required.'
+							}
+							$(this).parent().parent().addClass('has-error');
+						}else{
+							$(this).parent().parent().removeClass('has-error');
+						}
+					})
+					
+					if($('#password').val()!=''){
+						if($('#password').val()!=$('#passwordAgain').val()){
+							noErrorFlag = false;
+							$('#password,#passwordAgain').parent().parent().addClass('has-error');
+							errorMessage += ' Password and Retype do not match!'
+						}else{
+							$('#password,#passwordAgain').parent().parent().removeClass('has-error');
+						}
+					}
+					if(noErrorFlag){
+						$('#id_login_form_local')
+							.attr('action','/signup');
+						
+						$('#id_login_form_local')[0].submit();
+					}else{
+						info_modal(errorMessage);
+					}
+				})
+			</script>
